@@ -577,7 +577,7 @@ class ScaledSphereMeshGenerator(MeshGenerator):
         super().__init__(scene_dir, resource_dir)
         self.name = 'scaledsphere'
         self.test_fraction = 0.2
-        self.n_scenes = 200
+        self.n_scenes = 1
 
     def sphere_meshes(self, n_meshes, output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -672,8 +672,8 @@ class ScatterData:
         self.medium_param_generator = MixedMediumParamGenerator()
 
         self.dataset_folder = dataset_folder
-        self.n_train_samples = 100000
-        self.n_train_samples = 128
+        self.n_train_samples = 1
+        self.n_train_samples = 1
         self.constant_variables = []
         self.searchlight_configuration = False
         self.importance_sample_polynomials = False

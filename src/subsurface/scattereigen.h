@@ -51,7 +51,7 @@ public:
         std::ifstream f(filename, std::ios::binary);
         if (!f.is_open())
             std::cout << "FILE NOT FOUND: " << filename << std::endl;
-        std::cout << "Loading " << filename << std::endl;
+        std::cout << "Loading vector dynamic" << filename << std::endl;
         int32_t nDims;
         f.read(reinterpret_cast<char *>(&nDims), sizeof(nDims));
         int32_t size;
@@ -68,7 +68,7 @@ public:
         std::ifstream f(filename, std::ios::binary);
         if (!f.is_open())
             std::cout << "FILE NOT FOUND " << filename << std::endl;
-        std::cout << "Loading " << filename << std::endl;
+        std::cout << "Loading matrix dynamic" << filename << std::endl;
 
         int32_t nDims;
         f.read(reinterpret_cast<char *>(&nDims), sizeof(nDims));

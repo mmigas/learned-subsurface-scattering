@@ -135,23 +135,25 @@ class _Automoc:
                 out_sources = source[:]
 
                 for obj in source:
-                        if isinstance(obj,basestring):  # big kludge!
-                                print "scons: qt5: '%s' MAYBE USING AN OLD SCONS VERSION AND NOT CONVERTED TO 'File'. Discarded." % str(obj)
+                        if isinstance(obj,str):  # big kludge!
+                                print("scons: qt5: '%s' MAYBE USING AN OLD SCONS VERSION AND NOT CONVERTED TO 'File'. Discarded." % str(obj))
                                 continue
                         if not obj.has_builder():
                                 # binary obj file provided
                                 if debug:
-                                        print "scons: qt: '%s' seems to be a binary. Discarded." % str(obj)
+                                        print("scons: qt: '%s' seems to be a binary. Discarded." % str(obj))
                                 continue
                         cpp = obj.sources[0]
                         if not splitext(str(cpp))[1] in cxx_suffixes:
                                 if debug:
-                                        print "scons: qt: '%s' is no cxx file. Discarded." % str(cpp)
+                                        print("scons: qt: '%s' is no cxx file. Discarded." % str(cpp))
                                 # c or fortran source
                                 continue
                         #cpp_contents = comment.sub('', cpp.get_contents())
                         try:
                                 cpp_contents = cpp.get_contents()
+                                if not isinstance(cpp_contents, str):
+                                        cpp_contents = str(cpp_contents)
                         except: continue # may be an still not generated source
                         h=None
                         for h_ext in header_extensions:
@@ -161,12 +163,14 @@ class _Automoc:
                                 h = find_file(hname, (cpp.get_dir(),), env.File)
                                 if h:
                                         if debug:
-                                                print "scons: qt: Scanning '%s' (header of '%s')" % (str(h), str(cpp))
+                                                print("scons: qt: Scanning '%s' (header of '%s')" % (str(h), str(cpp)))
                                         #h_contents = comment.sub('', h.get_contents())
                                         h_contents = h.get_contents()
+                                        if not isinstance(h_contents, str):
+                                                h_contents = str(h_contents)
                                         break
                         if not h and debug:
-                                print "scons: qt: no header for '%s'." % (str(cpp))
+                                print("scons: qt: no header for '%s'." % (str(cpp)))
                         if h and q_object_search.search(h_contents):
                                 # h file with the Q_OBJECT macro found -> add moc_cpp
                                 moc_cpp = env.Moc5(h)
@@ -174,14 +178,14 @@ class _Automoc:
                                 out_sources.append(moc_o)
                                 #moc_cpp.target_scanner = SCons.Defaults.CScan
                                 if debug:
-                                        print "scons: qt: found Q_OBJECT macro in '%s', moc'ing to '%s'" % (str(h), str(moc_cpp))
+                                        print("scons: qt: found Q_OBJECT macro in '%s', moc'ing to '%s'" % (str(h), str(moc_cpp)))
                         if cpp and q_object_search.search(cpp_contents):
                                 # cpp file with Q_OBJECT macro found -> add moc
                                 # (to be included in cpp)
                                 moc = env.Moc5(cpp)
                                 env.Ignore(moc, moc)
                                 if debug:
-                                        print "scons: qt: found Q_OBJECT macro in '%s', moc'ing to '%s'" % (str(cpp), str(moc))
+                                        print("scons: qt: found Q_OBJECT macro in '%s', moc'ing to '%s'" % (str(cpp), str(moc)))
                                 #moc.source_scanner = SCons.Defaults.CScan
                 # restore the original env attributes (FIXME)
                 objBuilder.env = objBuilderEnv
@@ -255,8 +259,6 @@ def generate(env):
                 QT5_MOC = locateQt5Command(env,'moc', env['QTDIR']),
                 QT5_UIC = locateQt5Command(env,'uic', env['QTDIR']),
                 QT5_RCC = locateQt5Command(env,'rcc', env['QTDIR']),
-                QT5_LUPDATE = locateQt5Command(env,'lupdate', env['QTDIR']),
-                QT5_LRELEASE = locateQt5Command(env,'lrelease', env['QTDIR']),
 
                 QT5_AUTOSCAN = 1, # Should the qt tool try to figure out, which sources are to be moc'ed?
 
@@ -288,24 +290,8 @@ def generate(env):
                 QT5_MOCFROMCXXCOM = [
                         '$QT5_MOC $QT5_MOCFROMCXXFLAGS $QT5_MOCINCFLAGS -o $TARGET $SOURCE',
                         Action(checkMocIncluded,None)],
-                QT5_LUPDATECOM = '"$QT5_LUPDATE" $SOURCE -ts $TARGET',
-                QT5_LRELEASECOM = '"$QT5_LRELEASE" $SOURCE',
                 QT5_RCCCOM = '"$QT5_RCC" $QT5_QRCFLAGS $SOURCE -o $TARGET',
-                )
-
-        # Translation builder
-        tsbuilder = Builder(
-                action = SCons.Action.Action('$QT5_LUPDATECOM'), #,'$QT5_LUPDATECOMSTR'),
-                multi=1
-                )
-        env.Append( BUILDERS = { 'Ts': tsbuilder } )
-        qmbuilder = Builder(
-                action = SCons.Action.Action('$QT5_LRELEASECOM'),# , '$QT5_LRELEASECOMSTR'),
-                src_suffix = '.ts',
-                suffix = '.qm',
-                single_source = True
-                )
-        env.Append( BUILDERS = { 'Qm': qmbuilder } )
+        )
 
         # Resource builder
         def scanResources(node, env, path, arg):
@@ -321,6 +307,8 @@ def generate(env):
                                         result.append(itemPath)
                         return result
                 contents = node.get_contents()
+                if not isinstance(contents, str):
+                        contents = str(contents)
                 includes = qrcinclude_re.findall(contents)
                 qrcpath = os.path.dirname(node.path)
                 dirs = [included for included in includes if os.path.isdir(os.path.join(qrcpath,included))]
@@ -390,31 +378,31 @@ def enable_modules(self, modules, debug=False, crosscompiling=False) :
         import sys
 
         validModules = [
-                'Qt5Core',
-                'Qt5Gui',
-                'Qt5Widgets',
-                'Qt5OpenGL',
-                'Qt53Support',
-                'Qt5Assistant', # deprecated
-                'Qt5AssistantClient',
-                'Qt5Script',
-                'Qt5DBus',
-                'Qt5Sql',
-                'Qt5Svg',
+                'QtCore',
+                'QtGui',
+                'QtWidgets',
+                'QtOpenGL',
+                'Qt3Support',
+                'QtAssistant', # deprecated
+                'QtAssistantClient',
+                'QtScript',
+                'QtDBus',
+                'QtSql',
+                'QtSvg',
                 # The next modules have not been tested yet so, please
                 # maybe they require additional work on non Linux platforms
-                'Qt5Network',
-                'Qt5Test',
-                'Qt5Xml',
-                'Qt5XmlPatterns',
-                'Qt5UiTools',
-                'Qt5Designer',
-                'Qt5DesignerComponents',
-                'Qt5WebKit',
-                'Qt5Help',
-                'Qt5Script',
-                'Qt5ScriptTools',
-                'Qt5Multimedia',
+                'QtNetwork',
+                'QtTest',
+                'QtXml',
+                'QtXmlPatterns',
+                'QtUiTools',
+                'QtDesigner',
+                'QtDesignerComponents',
+                'QtWebKit',
+                'QtHelp',
+                'QtScript',
+                'QtScriptTools',
+                'QtMultimedia',
                 ]
         pclessModules = [
 # in qt <= 4.3 designer and designerComponents are pcless, on qt5.4 they are not, so removed.
